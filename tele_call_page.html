@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tele-consultation - Apo-Bot</title>
+    <!-- NEW: Import Agora Video SDK -->
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+    <style>
+        /* ... (all your existing CSS) ... */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ECF4E8 0%, #F6F4F0 100%);
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #79D7BE;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn {
+            background: white;
+            color: #79D7BE;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-title {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .doctors-section {
+            display: block; /* Show by default */
+        }
+
+        .doctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .doctor-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(121, 215, 190, 0.2);
+            transition: all 0.3s;
+        }
+
+        .doctor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(121, 215, 190, 0.3);
+        }
+
+        .doctor-header {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .doctor-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #79D7BE;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .doctor-info {
+            flex: 1;
+        }
+
+        .doctor-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .doctor-specialty {
+            color: #79D7BE;
+            font-size: 0.9rem;
+        }
+
+        .doctor-experience {
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        .doctor-rating {
+            color: #ffa500;
+            margin-top: 0.5rem;
+        }
+
+        .availability {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .availability.online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .availability.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .select-btn {
+            width: 100%;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: all 0.3s;
+        }
+
+        .call-now-btn {
+            background: #28a745; /* Green for "Call" */
+        }
+        .call-now-btn:hover {
+            background: #218838;
+        }
+
+        .offline-btn {
+            background: #ccc;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+
+        /* --- NEW Styles for Video Call --- */
+        .video-container {
+            position: relative;
+            width: 100%;
+            min-height: 400px;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-feed {
+            /* This is a placeholder for the actual video stream */
+            font-size: 1.2rem;
+            color: #999;
+        }
+
+        .video-feed.remote {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .video-feed.local {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 140px;
+            height: 105px;
+            background: #333;
+            border: 2px solid white;
+            border-radius: 5px;
+            z-index: 10;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 0.5rem;
+        }
+
+        .call-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .control-btn {
+            background: #eee;
+            color: #333;
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+        .control-btn:hover {
+            background: #ddd;
+        }
+
+        .end-call-btn {
+            background: #dc3545;
+            color: white;
+        }
+        .end-call-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <span>🤖 Apo-Bot</span>
+        </div>
+        <button class="back-btn" onclick="window.location.href='apobot_landing (1).html'">← Back</button>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Tele-consultation</h1>
+
+        <div class="doctors-section" id="doctorsSection">
+            <h2 class="section-title">Doctors Available Now</h2>
+            <div class="doctors-grid" id="doctorsGrid">
+                <!-- Doctors will be populated by JavaScript -->
+                <p>Loading available doctors...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Call Modal -->
+    <div class="modal" id="callModal">
+        <div class="modal-content">
+            <h3 class="modal-header">Video Call with <span id="callDoctorName"></span></h3>
+            
+            <div class="video-container">
+                <div class="video-feed remote" id="remoteVideo">
+                    Waiting for doctor to join...
+                </div>
+                <div class="video-feed local" id="localVideo">
+                    <!-- Your video feed will be inserted here by Agora SDK -->
+                </div>
+            </div>
+
+            <div class="call-controls">
+                <button class="control-btn" id="muteBtn" onclick="toggleMute()">🔇</button>
+                <button class="control-btn" id="videoBtn" onclick="toggleVideo()">📹</button>
+                <button class="control-btn end-call-btn" onclick="endCall()">📞</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- NEW: Config ---
+        const API_URL = 'http://localhost:8080/api';
+        const TOKEN_URL = 'http://localhost:8080/get-video-token';
+        
+        // This should be your actual App ID from the Agora console
+        const APP_ID = 'YOUR_AGORA_APP_ID'; 
+        // This should be a unique user ID, e.g., from a login
+        const USER_ID = "patient-" + Math.floor(Math.random() * 10000); 
+
+        // --- NEW: Agora Client Globals ---
+        let rtcClient = null;
+        let localAudioTrack = null;
+        let localVideoTrack = null;
+        let isMuted = false;
+        let isVideoOff = false;
+
+        // --- UPDATED: Load doctors from backend ---
+        async function showAllDoctors() {
+            const grid = document.getElementById('doctorsGrid');
+            grid.innerHTML = ''; // Clear "Loading..."
+
+            try {
+                const response = await fetch(`${API_URL}/doctors/online`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch doctors: ${response.status} ${response.statusText}`);
+                }
+                
+                const allDoctors = await response.json();
+
+                if (allDoctors.length === 0) {
+                    grid.innerHTML = '<p>No doctors are available right now.</p>';
+                    return;
+                }
+
+                allDoctors.forEach(doctor => {
+                    let buttonHtml = '';
+                    let availabilityHtml = '';
+
+                    if (doctor.status === 'online') {
+                        availabilityHtml = `<span class="availability ${doctor.status}">🟢 Available</span>`;
+                        buttonHtml = `<button class="select-btn call-now-btn" onclick="startCall('${doctor.name}')">📞 Call Now</button>`;
+                    } else {
+                        availabilityHtml = `<span class="availability ${doctor.status}">🔴 Offline</span>`;
+                        buttonHtml = `<button class="select-btn offline-btn" disabled>Offline</button>`;
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'doctor-card';
+                    card.innerHTML = `
+                        <div class="doctor-header">
+                            <div class="doctor-photo">${doctor.photo || '🧑‍⚕️'}</div>
+                            <div class="doctor-info">
+                                <div class="doctor-name">${doctor.name}</div>
+                                <div class="doctor-specialty">${doctor.specialization}</div>
+                                <div class="doctor-experience">${doctor.experience} experience</div>
+                                <div class="doctor-rating">⭐ ${doctor.rating}/5.0</div>
+                            </div>
+                        </div>
+                        ${availabilityHtml}
+                        ${buttonHtml}
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (err) {
+                console.error("Fetch Error:", err);
+                
+                // NEW: Add more descriptive error logging for the user
+                let errorMessage = '<p>Error loading doctors. Please try again later.</p>';
+                if (err instanceof TypeError && err.message === 'Failed to fetch') {
+                    errorMessage = '<p style="color: red; font-weight: bold;">Connection Error: Could not connect to the backend.</p>' +
+                                   '<p>Please make sure your backend server (`index.js`) is running on `http://localhost:8080`.</p>';
+                } else {
+                    errorMessage = `<p>Error: ${err.message}</p>`;
+                }
+                grid.innerHTML = errorMessage;
+            }
+        }
+
+        // --- UPDATED: Full Agora Call Logic ---
+        async function startCall(doctorName) {
+            document.getElementById('callDoctorName').textContent = doctorName;
+            document.getElementById('remoteVideo').textContent = `Connecting to ${doctorName}...`;
+            document.getElementById('callModal').classList.add('show');
+            
+            try {
+                // 1. Create a unique channel name
+                const channelName = `tele-call-${doctorName.replace(/\s+/g, '-')}-${Date.now()}`;
+
+                // 2. Fetch the video token from our backend
+                const tokenResponse = await fetch(`${TOKEN_URL}/${channelName}`);
+                if (!tokenResponse.ok) {
+                    throw new Error(`Failed to fetch video token: ${tokenResponse.status} ${tokenResponse.statusText}`);
+                }
+                const { token } = await tokenResponse.json();
+
+                // 3. Initialize Agora Client
+                rtcClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+
+                // 4. Handle remote user joining
+                rtcClient.on('user-published', async (user, mediaType) => {
+                    await rtcClient.subscribe(user, mediaType);
+                    if (mediaType === 'video') {
+                        const remoteVideoTrack = user.videoTrack;
+                        const playerContainer = document.getElementById('remoteVideo');
+                        playerContainer.innerHTML = ''; // Clear "Waiting..."
+                        remoteVideoTrack.play(playerContainer);
+                    }
+                    if (mediaType === 'audio') {
+                        user.audioTrack.play();
+                    }
+                });
+
+                // 5. Handle remote user leaving
+                rtcClient.on('user-unpublished', user => {
+                    const playerContainer = document.getElementById('remoteVideo');
+                    playerContainer.innerHTML = 'Doctor has left the call.';
+                });
+
+                // 6. Join the channel
+                await rtcClient.join(APP_ID, channelName, token, USER_ID);
+
+                // 7. Get and publish local camera/mic
+                [localAudioTrack, localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+                
+                const localPlayerContainer = document.getElementById('localVideo');
+                localPlayerContainer.innerHTML = ''; // Clear "Your Camera"
+                localVideoTrack.play(localPlayerContainer);
+
+                await rtcClient.publish([localAudioTrack, localVideoTrack]);
+
+            } catch (err) {
+                console.error('Failed to start call:', err);
+                
+                // NEW: Add more descriptive error logging for the user
+                let errorText = `Failed to connect: ${err.message}`;
+                if (err instanceof TypeError && err.message === 'Failed to fetch') {
+                    errorText = 'Failed to get video token. Is the backend server running?';
+                }
+                document.getElementById('remoteVideo').textContent = errorText;
+                // Keep modal open so user can see the error
+            }
+        }
+
+        async function endCall() {
+            try {
+                if(localAudioTrack) {
+                    localAudioTrack.stop();
+                    localAudioTrack.close();
+                }
+                if(localVideoTrack) {
+                    localVideoTrack.stop();
+                    localVideoTrack.close();
+                }
+                if (rtcClient) {
+                    await rtcClient.leave();
+                }
+            } catch (err) {
+                console.error("Error leaving call:", err);
+            } finally {
+                document.getElementById('callModal').classList.remove('show');
+                document.getElementById('localVideo').innerHTML = '';
+                document.getElementById('remoteVideo').textContent = 'Waiting for doctor to join...';
+                isMuted = false;
+                isVideoOff = false;
+                document.getElementById('muteBtn').textContent = '🔇';
+                document.getElementById('videoBtn').textContent = '📹';
+            }
+        }
+
+        function toggleMute() {
+            if (!localAudioTrack) return;
+            isMuted = !isMuted;
+            localAudioTrack.setMuted(isMuted);
+            document.getElementById('muteBtn').textContent = isMuted ? '🔈' : '🔇';
+        }
+
+        function toggleVideo() {
+            if (!localVideoTrack) return;
+            isVideoOff = !isVideoOff;
+            localVideoTrack.setEnabled(!isVideoOff);
+            document.getElementById('videoBtn').textContent = isVideoOff ? '📸' : '📹';
+        }
+
+        // Load all doctors when the page loads
+        window.addEventListener('load', showAllDoctors);
+    </script>
+</body>
+</html>

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Tracker - Apo-Bot</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ECF4E8 0%, #F6F4F0 100%);
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #79D7BE;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn {
+            background: white;
+            color: #79D7BE;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-title {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .input-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(121, 215, 190, 0.2);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-label {
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .input-field {
+            padding: 0.75rem;
+            border: 2px solid #ECF4E8;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #79D7BE;
+        }
+
+        .save-metric-btn {
+            background: #79D7BE;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .save-metric-btn:hover {
+            background: #5fc4a8;
+        }
+
+        .analytics-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(121, 215, 190, 0.2);
+            margin-bottom: 2rem;
+        }
+
+        .filter-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #ECF4E8;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #79D7BE;
+            color: white;
+            border-color: #79D7BE;
+        }
+
+        .metric-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .insight-card {
+            background: #F6F4F0;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .insight-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-label {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .insight-value {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .insight-trend {
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        .trend-up {
+            color: #dc3545;
+        }
+
+        .trend-down {
+            color: #28a745;
+        }
+
+        .trend-stable {
+            color: #ffc107;
+        }
+
+        .history-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(121, 215, 190, 0.2);
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .history-table th {
+            background: #ECF4E8;
+            padding: 1rem;
+            text-align: left;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .history-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #ECF4E8;
+            color: #555;
+        }
+
+        .history-table tr:hover {
+            background: #F6F4F0;
+        }
+
+        .view-details-btn {
+            background: #79D7BE;
+            color: white;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .metric-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-bp {
+            background: #ffe5e5;
+            color: #dc3545;
+        }
+
+        .badge-glucose {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-heart {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge-weight {
+            background: #e7e7ff;
+            color: #4a4aff;
+        }
+
+        .badge-temp {
+            background: #ffe5cc;
+            color: #cc5200;
+        }
+
+        @media (max-width: 768px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <span>🤖 Apo-Bot</span>
+        </div>
+        <button class="back-btn" onclick="window.history.back()">← Back</button>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Health Tracker</h1>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <h2 class="section-title">Log Daily Metrics</h2>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label class="input-label">📊 Metric Type</label>
+                    <select class="input-field" id="metricType">
+                        <option value="bp">Blood Pressure</option>
+                        <option value="glucose">Glucose Level</option>
+                        <option value="heart">Heart Rate</option>
+                        <option value="weight">Weight</option>
+                        <option value="temp">Temperature</option>
+                    </select>
+                </div>
+                <div class="input-group" id="bpInputs">
+                    <label class="input-label">💉 Systolic/Diastolic</label>
+                    <input type="text" class="input-field" id="bpValue" placeholder="e.g., 120/80">
+                </div>
+                <div class="input-group" id="otherInputs" style="display: none;">
+                    <label class="input-label" id="valueLabel">Value</label>
+                    <input type="number" class="input-field" id="metricValue" placeholder="Enter value">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">📅 Date & Time</label>
+                    <input type="datetime-local" class="input-field" id="metricDate">
+                </div>
+            </div>
+            <button class="save-metric-btn" onclick="saveMetric()">Save Metric</button>
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="analytics-section">
+            <h2 class="section-title">Analytics Dashboard</h2>
+            <div class="filter-controls">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="setTimeFilter('week')">Last Week</button>
+                    <button class="filter-btn" onclick="setTimeFilter('month')">Last Month</button>
+                    <button class="filter-btn" onclick="setTimeFilter('3months')">3 Months</button>
+                </div>
+                <div class="metric-selector">
+                    <button class="filter-btn active" onclick="setChartMetric('bp')">BP</button>
+                    <button class="filter-btn" onclick="setChartMetric('glucose')">Glucose</button>
+                    <button class="filter-btn" onclick="setChartMetric('heart')">Heart Rate</button>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="metricsChart"></canvas>
+            </div>
+
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-icon">💉</div>
+                    <div class="insight-label">Avg Blood Pressure</div>
+                    <div class="insight-value">122/78</div>
+                    <div class="insight-trend trend-stable">↔ Stable</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-icon">🍬</div>
+                    <div class="insight-label">Avg Glucose</div>
+                    <div class="insight-value">105 mg/dL</div>
+                    <div class="insight-trend trend-down">↓ Improving</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-icon">❤️</div>
+                    <div class="insight-label">Avg Heart Rate</div>
+                    <div class="insight-value">72 bpm</div>
+                    <div class="insight-trend trend-stable">↔ Normal</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-icon">⚖️</div>
+                    <div class="insight-label">Current Weight</div>
+                    <div class="insight-value">75 kg</div>
+                    <div class="insight-trend trend-down">↓ -2kg this month</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Log -->
+        <div class="history-section">
+            <h2 class="section-title">Metric History</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Metric Type</th>
+                        <th>Value</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <tr>
+                        <td>Nov 14, 2025 - 08:30 AM</td>
+                        <td><span class="metric-badge badge-bp">Blood Pressure</span></td>
+                        <td>120/80 mmHg</td>
+                        <td><button class="view-details-btn" onclick="viewDetails(0)">View Details</button></td>
+                    </tr>
+                    <tr>
+                        <td>Nov 14, 2025 - 07:00 AM</td>
+                        <td><span class="metric-badge badge-glucose">Glucose</span></td>
+                        <td>98 mg/dL</td>
+                        <td><button class="view-details-btn" onclick="viewDetails(1)">View Details</button></td>
+                    </tr>
+                    <tr>
+                        <td>Nov 13, 2025 - 08:15 AM</td>
+                        <td><span class="metric-badge badge-heart">Heart Rate</span></td>
+                        <td>72 bpm</td>
+                        <td><button class="view-details-btn" onclick="viewDetails(2)">View Details</button></td>
+                    </tr>
+                    <tr>
+                        <td>Nov 13, 2025 - 07:00 AM</td>
+                        <td><span class="metric-badge badge-weight">Weight</span></td>
+                        <td>75 kg</td>
+                        <td><button class="view-details-btn" onclick="viewDetails(3)">View Details</button></td>
+                    </tr>
+                    <tr>
+                        <td>Nov 12, 2025 - 06:00 PM</td>
+                        <td><span class="metric-badge badge-temp">Temperature</span></td>
+                        <td>98.6°F</td>
+                        <td><button class="view-details-btn" onclick="viewDetails(4)">View Details</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let currentChart = null;
+        let currentTimeFilter = 'week';
+        let currentMetric = 'bp';
+
+        // Set current date and time
+        document.getElementById('metricDate').valueAsDate = new Date();
+
+        // Handle metric type change
+        document.getElementById('metricType').addEventListener('change', function() {
+            const type = this.value;
+            const bpInputs = document.getElementById('bpInputs');
+            const otherInputs = document.getElementById('otherInputs');
+            const valueLabel = document.getElementById('valueLabel');
+
+            if (type === 'bp') {
+                bpInputs.style.display = 'flex';
+                otherInputs.style.display = 'none';
+            } else {
+                bpInputs.style.display = 'none';
+                otherInputs.style.display = 'flex';
+                
+                switch(type) {
+                    case 'glucose':
+                        valueLabel.textContent = '🍬 Glucose (mg/dL)';
+                        break;
+                    case 'heart':
+                        valueLabel.textContent = '❤️ Heart Rate (bpm)';
+                        break;
+                    case 'weight':
+                        valueLabel.textContent = '⚖️ Weight (kg)';
+                        break;
+                    case 'temp':
+                        valueLabel.textContent = '🌡️ Temperature (°F)';
+                        break;
+                }
+            }
+        });
+
+        function saveMetric() {
+            const type = document.getElementById('metricType').value;
+            let value;
+            
+            if (type === 'bp') {
+                value = document.getElementById('bpValue').value;
+            } else {
+                value = document.getElementById('metricValue').value;
+            }
+
+            if (!value) {
+                alert('Please enter a value');
+                return;
+            }
+
+            alert('✅ Metric saved successfully!');
+            
+            // Reset form
+            document.getElementById('bpValue').value = '';
+            document.getElementById('metricValue').value = '';
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+            
+            const data = generateChartData(currentMetric, currentTimeFilter);
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            currentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: data.label,
+                        data: data.values,
+                        borderColor: '#79D7BE',
+                        backgroundColor: 'rgba(121, 215, 190, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateChartData(metric, timeFilter) {
+            let labels, values, label;
+
+            if (timeFilter === 'week') {
+                labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            } else if (timeFilter === 'month') {
+                labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+            } else {
+                labels = ['Month 1', 'Month 2', 'Month 3'];
+            }
+
+            switch(metric) {
+                case 'bp':
+                    label = 'Systolic BP (mmHg)';
+                    values = timeFilter === 'week' ? [118, 122, 120, 125, 119, 121, 120] :
+                             timeFilter === 'month' ? [120, 122, 119, 121] :
+                             [122, 120, 119];
+                    break;
+                case 'glucose':
+                    label = 'Glucose (mg/dL)';
+                    values = timeFilter === 'week' ? [95, 98, 102, 100, 96, 99, 98] :
+                             timeFilter === 'month' ? [98, 100, 96, 99] :
+                             [105, 100, 98];
+                    break;
+                case 'heart':
+                    label = 'Heart Rate (bpm)';
+                    values = timeFilter === 'week' ? [70, 72, 71, 73, 69, 72, 71] :
+                             timeFilter === 'month' ? [71, 72, 70, 72] :
+                             [73, 72, 71];
+                    break;
+            }
+
+            return { labels, values, label };
+        }
+
+        function setTimeFilter(filter) {
+            currentTimeFilter = filter;
+            document.querySelectorAll('.filter-buttons .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            initChart();
+        }
+
+        function setChartMetric(metric) {
+            currentMetric = metric;
+            document.querySelectorAll('.metric-selector .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            initChart();
+        }
+
+        function viewDetails(index) {
+            alert('Detailed view would show more information about this metric entry, including trends, comparisons, and recommendations.');
+        }
+
+        // Initialize chart on page load
+        window.addEventListener('load', initChart);
+    </script>
+</body>
+</html>

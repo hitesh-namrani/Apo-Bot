@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - Apo-Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ECF4E8 0%, #F6F4F0 100%);
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #79D7BE;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn {
+            background: white;
+            color: #79D7BE;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-title {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .symptom-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(121, 215, 190, 0.2);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .symptom-input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #ECF4E8;
+            border-radius: 10px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .voice-btn {
+            background: #79D7BE;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            width: 60px;
+            transition: all 0.3s;
+        }
+
+        .voice-btn:hover {
+            background: #5fc4a8;
+        }
+
+        .symptom-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .chip {
+            background: #ECF4E8;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chip:hover {
+            background: #79D7BE;
+            color: white;
+        }
+
+        .analyze-btn {
+            background: #79D7BE;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: all 0.3s;
+        }
+
+        .analyze-btn:hover {
+            background: #5fc4a8;
+        }
+
+        .ai-response {
+            background: #ECF4E8;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1.5rem;
+            border-left: 4px solid #79D7BE;
+            display: none;
+        }
+
+        .ai-response.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .specialty {
+            font-size: 1.2rem;
+            color: #79D7BE;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .reasoning {
+            color: #666;
+        }
+
+        .doctors-section {
+            display: none;
+        }
+
+        .doctors-section.show {
+            display: block;
+        }
+
+        .doctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .doctor-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(121, 215, 190, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .doctor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(121, 215, 190, 0.3);
+        }
+
+        .doctor-header {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .doctor-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #79D7BE;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .doctor-info {
+            flex: 1;
+        }
+
+        .doctor-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .doctor-specialty {
+            color: #79D7BE;
+            font-size: 0.9rem;
+        }
+
+        .doctor-experience {
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        .doctor-rating {
+            color: #ffa500;
+            margin-top: 0.5rem;
+        }
+
+        .availability {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .availability.online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .availability.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .select-btn {
+            width: 100%;
+            background: #79D7BE;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: all 0.3s;
+        }
+
+        .select-btn:hover {
+            background: #5fc4a8;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .calendar-day {
+            padding: 1rem;
+            text-align: center;
+            border: 2px solid #ECF4E8;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .calendar-day:hover {
+            border-color: #79D7BE;
+            background: #ECF4E8;
+        }
+
+        .calendar-day.selected {
+            background: #79D7BE;
+            color: white;
+            border-color: #79D7BE;
+        }
+
+        .time-filters {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #ECF4E8;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #79D7BE;
+            color: white;
+            border-color: #79D7BE;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .time-slot {
+            padding: 0.75rem;
+            text-align: center;
+            border: 2px solid #ECF4E8;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .time-slot:hover {
+            border-color: #79D7BE;
+            background: #ECF4E8;
+        }
+
+        .time-slot.selected {
+            background: #79D7BE;
+            color: white;
+            border-color: #79D7BE;
+        }
+
+        .confirm-booking-btn {
+            width: 100%;
+            background: #79D7BE;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .close-modal {
+            background: #ccc;
+            color: #333;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .success-message {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: #79D7BE;
+            margin-bottom: 1rem;
+        }
+
+        .success-text {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .appointment-details {
+            background: #ECF4E8;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: left;
+            margin: 1rem 0;
+        }
+
+        .detail-row {
+            margin: 0.5rem 0;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            .doctors-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .calendar {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <span>🤖 Apo-Bot</span>
+        </div>
+        <button class="back-btn" onclick="window.history.back()">← Back</button>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Book an Appointment</h1>
+
+        <div class="symptom-section">
+            <h2 class="section-title">Describe Your Symptoms</h2>
+            <div class="input-group">
+                <textarea class="symptom-input" id="symptomInput" placeholder="Describe your symptoms in detail..."></textarea>
+                <button class="voice-btn" onclick="startVoiceInput()">🎤</button>
+            </div>
+            
+            <div class="symptom-chips">
+                <button class="chip" onclick="addSymptom('cough')">🤧 Cough</button>
+                <button class="chip" onclick="addSymptom('fever')">🌡️ Fever</button>
+                <button class="chip" onclick="addSymptom('rash')">🔴 Rash</button>
+                <button class="chip" onclick="addSymptom('headache')">🤕 Headache</button>
+                <button class="chip" onclick="addSymptom('stomach pain')">💢 Stomach Pain</button>
+                <button class="chip" onclick="addSymptom('chest pain')">❤️ Chest Pain</button>
+            </div>
+
+            <button class="analyze-btn" onclick="analyzeSymptoms()">Analyze Symptoms</button>
+
+            <div class="ai-response" id="aiResponse">
+                <div class="specialty" id="specialty"></div>
+                <div class="reasoning" id="reasoning"></div>
+            </div>
+        </div>
+
+        <div class="doctors-section" id="doctorsSection">
+            <h2 class="section-title">Available Doctors</h2>
+            <div class="doctors-grid" id="doctorsGrid"></div>
+        </div>
+    </div>
+
+    <!-- Appointment Booking Modal -->
+    <div class="modal" id="bookingModal">
+        <div class="modal-content">
+            <div id="slotSelection">
+                <h3 class="modal-header">Select Appointment Slot</h3>
+                <p style="color: #666; margin-bottom: 1rem;">Doctor: <strong id="selectedDoctor"></strong></p>
+                
+                <h4 style="margin-top: 1rem; color: #2c3e50;">Select Date</h4>
+                <div class="calendar" id="calendar"></div>
+
+                <h4 style="margin-top: 1.5rem; color: #2c3e50;">Filter by Time</h4>
+                <div class="time-filters">
+                    <button class="filter-btn active" onclick="filterTime('all')">All</button>
+                    <button class="filter-btn" onclick="filterTime('morning')">Morning</button>
+                    <button class="filter-btn" onclick="filterTime('afternoon')">Afternoon</button>
+                    <button class="filter-btn" onclick="filterTime('evening')">Evening</button>
+                </div>
+
+                <h4 style="margin-top: 1rem; color: #2c3e50;">Available Time Slots</h4>
+                <div class="time-slots" id="timeSlots"></div>
+
+                <button class="confirm-booking-btn" onclick="confirmBooking()">Confirm Booking</button>
+                <button class="close-modal" onclick="closeModal()">Cancel</button>
+            </div>
+
+            <div id="successMessage" style="display: none;">
+                <div class="success-message">
+                    <div class="success-icon">✅</div>
+                    <div class="success-text">Appointment Booked Successfully!</div>
+                    <div class="appointment-details">
+                        <div class="detail-row"><strong>Doctor:</strong> <span id="confirmDoctor"></span></div>
+                        <div class="detail-row"><strong>Date:</strong> <span id="confirmDate"></span></div>
+                        <div class="detail-row"><strong>Time:</strong> <span id="confirmTime"></span></div>
+                        <div class="detail-row"><strong>Specialty:</strong> <span id="confirmSpecialty"></span></div>
+                    </div>
+                    <button class="confirm-booking-btn" onclick="closeModal()">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const symptomToSpecialty = {
+            'cough': 'General Physician',
+            'fever': 'General Physician',
+            'rash': 'Dermatologist',
+            'headache': 'Neurologist',
+            'stomach pain': 'Gastroenterologist',
+            'chest pain': 'Cardiologist'
+        };
+
+        const doctors = {
+            'General Physician': [
+                { name: 'Dr. Rajesh Gupta', experience: '15 years', rating: 4.8, status: 'online', photo: '👨‍⚕️' },
+                { name: 'Dr. Priya Sharma', experience: '12 years', rating: 4.7, status: 'online', photo: '👩‍⚕️' }
+            ],
+            'Dermatologist': [
+                { name: 'Dr. Anjali Mehta', experience: '10 years', rating: 4.9, status: 'online', photo: '👩‍⚕️' },
+                { name: 'Dr. Vikram Singh', experience: '8 years', rating: 4.6, status: 'offline', photo: '👨‍⚕️' }
+            ],
+            'Neurologist': [
+                { name: 'Dr. Sanjay Rao', experience: '20 years', rating: 4.9, status: 'online', photo: '👨‍⚕️' }
+            ],
+            'Gastroenterologist': [
+                { name: 'Dr. Kavita Reddy', experience: '14 years', rating: 4.8, status: 'online', photo: '👩‍⚕️' }
+            ],
+            'Cardiologist': [
+                { name: 'Dr. Amit Patel', experience: '18 years', rating: 4.9, status: 'online', photo: '👨‍⚕️' }
+            ]
+        };
+
+        let selectedSpecialty = '';
+        let selectedDoctorName = '';
+        let selectedDate = '';
+        let selectedTime = '';
+        let currentFilter = 'all';
+
+        function addSymptom(symptom) {
+            const input = document.getElementById('symptomInput');
+            if (input.value) {
+                input.value += ', ' + symptom;
+            } else {
+                input.value = symptom;
+            }
+        }
+
+        function startVoiceInput() {
+            alert('Voice input would be activated here using Web Speech API');
+        }
+
+        function analyzeSymptoms() {
+            const input = document.getElementById('symptomInput').value.toLowerCase();
+            if (!input) {
+                alert('Please describe your symptoms first');
+                return;
+            }
+
+            let foundSpecialty = 'General Physician';
+            for (let symptom in symptomToSpecialty) {
+                if (input.includes(symptom)) {
+                    foundSpecialty = symptomToSpecialty[symptom];
+                    break;
+                }
+            }
+
+            selectedSpecialty = foundSpecialty;
+            
+            document.getElementById('specialty').textContent = `Recommended: ${foundSpecialty}`;
+            document.getElementById('reasoning').textContent = `Based on your symptoms: "${input}"`;
+            document.getElementById('aiResponse').classList.add('show');
+
+            showDoctors(foundSpecialty);
+        }
+
+        function showDoctors(specialty) {
+            const section = document.getElementById('doctorsSection');
+            const grid = document.getElementById('doctorsGrid');
+            
+            grid.innerHTML = '';
+            
+            const doctorList = doctors[specialty] || [];
+            doctorList.forEach(doctor => {
+                const card = document.createElement('div');
+                card.className = 'doctor-card';
+                card.innerHTML = `
+                    <div class="doctor-header">
+                        <div class="doctor-photo">${doctor.photo}</div>
+                        <div class="doctor-info">
+                            <div class="doctor-name">${doctor.name}</div>
+                            <div class="doctor-specialty">${specialty}</div>
+                            <div class="doctor-experience">${doctor.experience} experience</div>
+                            <div class="doctor-rating">⭐ ${doctor.rating}/5.0</div>
+                        </div>
+                    </div>
+                    <span class="availability ${doctor.status}">${doctor.status === 'online' ? '🟢 Available' : '🔴 Offline'}</span>
+                    <button class="select-btn" onclick="selectDoctor('${doctor.name}', '${specialty}')">Select Doctor</button>
+                `;
+                grid.appendChild(card);
+            });
+
+            section.classList.add('show');
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function selectDoctor(doctorName, specialty) {
+            selectedDoctorName = doctorName;
+            selectedSpecialty = specialty;
+            document.getElementById('selectedDoctor').textContent = doctorName;
+            generateCalendar();
+            generateTimeSlots();
+            document.getElementById('bookingModal').classList.add('show');
+        }
+
+        function generateCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+            
+            const today = new Date();
+            for (let i = 0; i < 14; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                
+                const day = document.createElement('div');
+                day.className = 'calendar-day';
+                day.innerHTML = `<div>${date.getDate()}</div><div style="font-size: 0.8rem;">${date.toLocaleDateString('en-US', {month: 'short'})}</div>`;
+                day.onclick = () => selectDate(day, date);
+                calendar.appendChild(day);
+            }
+        }
+
+        function selectDate(element, date) {
+            document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedDate = date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function generateTimeSlots() {
+            const slots = document.getElementById('timeSlots');
+            slots.innerHTML = '';
+            
+            const times = {
+                morning: ['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'],
+                afternoon: ['12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM'],
+                evening: ['04:00 PM', '04:30 PM', '05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM']
+            };
+
+            let displayTimes = [];
+            if (currentFilter === 'all') {
+                displayTimes = [...times.morning, ...times.afternoon, ...times.evening];
+            } else {
+                displayTimes = times[currentFilter];
+            }
+
+            displayTimes.forEach(time => {
+                const slot = document.createElement('div');
+                slot.className = 'time-slot';
+                slot.textContent = time;
+                slot.onclick = () => selectTime(slot, time);
+                slots.appendChild(slot);
+            });
+        }
+
+        function selectTime(element, time) {
+            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedTime = time;
+        }
+
+        function filterTime(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            generateTimeSlots();
+        }
+
+        function confirmBooking() {
+            if (!selectedDate || !selectedTime) {
+                alert('Please select both date and time');
+                return;
+            }
+
+            document.getElementById('slotSelection').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+            
+            document.getElementById('confirmDoctor').textContent = selectedDoctorName;
+            document.getElementById('confirmDate').textContent = selectedDate;
+            document.getElementById('confirmTime').textContent = selectedTime;
+            document.getElementById('confirmSpecialty').textContent = selectedSpecialty;
+        }
+
+        function closeModal() {
+            document.getElementById('bookingModal').classList.remove('show');
+            document.getElementById('slotSelection').style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

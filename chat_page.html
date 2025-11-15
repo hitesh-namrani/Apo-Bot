@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apo-Bot AI Chat</title>
+    <style>
+        /* --- Styles remain unchanged --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ECF4E8 0%, #F6F4F0 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: #79D7BE;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn {
+            background: white;
+            color: #79D7BE;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 900px; /* Centered chat window */
+            margin: 2rem auto;
+            padding: 0 2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(121, 215, 190, 0.2);
+            display: flex;
+            flex-direction: column;
+            flex: 1; /* Make it fill the height */
+            max-height: calc(100vh - 10rem); /* Ensure it fits on screen */
+        }
+
+        .chat-header {
+            background: #79D7BE;
+            color: white;
+            padding: 1rem;
+            border-radius: 15px 15px 0 0;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #status-light {
+            font-size: 0.9rem;
+            font-weight: 400;
+            opacity: 0.8;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 10px;
+            max-width: 80%;
+            line-height: 1.5;
+            word-wrap: break-word;
+            white-space: pre-wrap; /* This will respect newlines */
+        }
+
+        .message.bot {
+            background: #ECF4E8;
+            align-self: flex-start;
+        }
+
+        .message.user {
+            background: #79D7BE;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .chat-input-container {
+            padding: 1rem;
+            border-top: 1px solid #ECF4E8;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #ECF4E8;
+            border-radius: 25px;
+            font-size: 0.9rem;
+        }
+
+        .send-btn {
+            background: #79D7BE;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <span>🤖 Apo-Bot</span>
+        </div>
+        <button class="back-btn" onclick="window.location.href='apobot_landing (1).html'">← Back to Home</button>
+    </header>
+
+    <div class="container">
+        <!-- AI Chat Panel -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <span>Apo-Bot AI Assistant</span>
+                <span id="status-light">Online</span>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <!-- Messages will be injected here -->
+            </div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="message-input" placeholder="Type your message..." onkeypress="handleChatKeypress(event)">
+                <button class="send-btn" id="send-button" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CONFIGURATION ---
+        // --- Use your ngrok URL from ngrok_setup.md ---
+        const BACKEND_URL = "https://darius-uncommenced-lamonica.ngrok-free.dev"; // <-- PASTE YOUR NGROK URL HERE
+        
+        const USER_ID = "patient-" + Math.floor(Math.random() * 10000);
+        
+        // --- NEW: Chat History for Conversational Memory ---
+        let chatHistory = [];
+      
+        // --- 3. DOM ELEMENTS ---
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const chatMessages = document.getElementById('chat-messages');
+        const statusLight = document.getElementById('status-light');
+
+        // --- 4. CHAT LOGIC (Using simple Fetch API) ---
+        
+        async function initChat() {
+            if (BACKEND_URL.includes("YOUR_NGROK_URL") || BACKEND_URL.includes("PASTE")) {
+                statusLight.textContent = "NGROK URL not set";
+                addMessageToChat('bot', "Error: BACKEND_URL is not set in chat_page.html. Please paste your ngrok URL.");
+                return;
+            }
+            // Add the welcome message
+            addMessageToChat('bot', "Hi! I'm Apo-Bot. How can I help you today? You can ask me to book an appointment, log your health, or get your medical history.");
+            statusLight.textContent = "Online";
+        }
+        
+        async function sendMessage() {
+            const messageText = messageInput.value.trim();
+            if (messageText === "") return;
+
+            // Add user message to UI and history
+            addMessageToChat('user', messageText);
+            messageInput.value = "";
+            
+            try {
+                // Send the message AND the entire history to the backend
+                const response = await fetch(`${BACKEND_URL}/api/chat-reply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: USER_ID,
+                        message: messageText, // Send the new message
+                        chatHistory: chatHistory // **NEW: Send the full history**
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const replyText = data.reply;
+                
+                // Add bot's reply to UI and history
+                addMessageToChat('bot', replyText);
+
+            } catch (err) {
+                console.error("Failed to send/receive message:", err);
+                let errorMsg = "Error: Could not send message.";
+                if (err.message.includes('Failed to fetch')) {
+                     errorMsg = "Error: Cannot connect to backend. Is the server running? Is your ngrok URL correct?";
+                }
+                addMessageToChat('bot', errorMsg);
+            }
+        }
+        
+        /**
+         * Adds a message to the chat UI and stores it in the history array
+         * in the format Gemini expects.
+         */
+        function addMessageToChat(sender, text) {
+            // 1. Add to UI
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.innerText = text; // Use innerText to handle newlines
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // 2. Add to History
+            const role = (sender === 'user') ? 'user' : 'model';
+            chatHistory.push({
+                role: role,
+                parts: [{ text: text }]
+            });
+        }
+        
+        // --- 6. EVENT LISTENERS ---
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Start the chat on page load
+        window.addEventListener('load', initChat);
+
+    </script>
+</body>
+</html>
